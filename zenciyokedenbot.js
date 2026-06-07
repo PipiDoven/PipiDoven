@@ -23,6 +23,14 @@ const hesaplar = [
   'ShaconunBicagi9',
 ];
 
+
+
+bot.on('login', () => console.log(username + ' LOGIN'));
+bot.on('spawn', () => console.log(username + ' SPAWN'));
+bot.on('end', () => console.log(username + ' END'));
+bot.on('kicked', r => console.log(username + ' KICK:', r));
+bot.on('error', e => console.log(username + ' ERROR:', e));
+
 const HOST = 'oyna.craftluna.net';
 const PORT = 25565;
 const sifre = 'Ates12345';
