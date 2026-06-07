@@ -1,4 +1,15 @@
 const mineflayer = require('mineflayer');
+const express = require('express');
+
+const app = express();
+
+app.get('/', (req, res) => {
+  res.send('Bot aktif');
+});
+
+app.listen(process.env.PORT || 3000, () => {
+  console.log('Web server açık');
+});
 
 const hesaplar = [
   'ShaconunBicagi',
@@ -24,7 +35,7 @@ function random(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-// 🔥 GLOBAL QUEUE (EN ÖNEMLİ FIX)
+// 🔥 SAĞLAM QUEUE (FIXLİ)
 let queue = Promise.resolve();
 
 function baslat(username) {
@@ -41,39 +52,32 @@ async function runBot(username) {
     username
   });
 
-  let logged = false;
+  let aktif = true;
 
   bot.once('spawn', async () => {
     console.log(`${username} girdi`);
 
     await bekle(random(5000, 9000));
 
-    if (!logged) {
-      bot.chat(`/login ${sifre}`);
-      logged = true;
-    }
+    if (aktif) bot.chat(`/login ${sifre}`);
 
     await bekle(random(5000, 8000));
-    bot.chat('/queue smp');
+    if (aktif) bot.chat('/queue smp');
 
     await bekle(random(5000, 8000));
-    bot.chat('/afk 1');
+    if (aktif) bot.chat('/afk 1');
   });
 
   bot.on('kicked', (reason) => {
     console.log(`${username} kick:`, reason);
 
+    aktif = false;
+
     const delay = random(30000, 60000);
 
-    // ❗ QUEUE içine al (spam engel)
-    queue = queue.then(() => {
-      return new Promise(res => {
-        setTimeout(() => {
-          runBot(username);
-          res();
-        }, delay);
-      });
-    });
+    setTimeout(() => {
+      baslat(username);
+    }, delay);
   });
 
   bot.on('error', (err) => {
@@ -81,7 +85,7 @@ async function runBot(username) {
   });
 }
 
-// 🔥 SIRALI BAŞLAT (çok önemli)
+// 🔥 TEK TEK BAŞLAT
 async function startAll() {
   for (const isim of hesaplar) {
     await bekle(random(8000, 15000));
