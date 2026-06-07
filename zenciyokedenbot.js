@@ -14,7 +14,6 @@ const hesaplar = [
 
 const HOST = 'oyna.craftluna.net';
 const PORT = 25565;
-
 const sifre = 'Ates12345';
 
 function bekle(ms) {
@@ -25,8 +24,16 @@ function random(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-async function baslat(username) {
-  await bekle(random(0, 5000)); // başlangıç spread
+// 🔥 GLOBAL QUEUE (EN ÖNEMLİ FIX)
+let queue = Promise.resolve();
+
+function baslat(username) {
+  queue = queue.then(() => runBot(username));
+}
+
+async function runBot(username) {
+
+  await bekle(random(5000, 12000));
 
   const bot = mineflayer.createBot({
     host: HOST,
@@ -34,32 +41,39 @@ async function baslat(username) {
     username
   });
 
-  let joined = false;
+  let logged = false;
 
   bot.once('spawn', async () => {
-    joined = true;
-
     console.log(`${username} girdi`);
 
-    await bekle(random(3000, 7000));
-    bot.chat(`/login ${sifre}`);
+    await bekle(random(5000, 9000));
 
-    await bekle(random(3000, 6000));
+    if (!logged) {
+      bot.chat(`/login ${sifre}`);
+      logged = true;
+    }
+
+    await bekle(random(5000, 8000));
     bot.chat('/queue smp');
 
-    await bekle(random(4000, 8000));
+    await bekle(random(5000, 8000));
     bot.chat('/afk 1');
   });
 
-  bot.on('kicked', async (reason) => {
+  bot.on('kicked', (reason) => {
     console.log(`${username} kick:`, reason);
 
-    // ❗ rate limit cooldown
-    const delay = random(15000, 40000);
-    console.log(`${username} ${delay}ms sonra tekrar deneyecek`);
+    const delay = random(30000, 60000);
 
-    await bekle(delay);
-    baslat(username);
+    // ❗ QUEUE içine al (spam engel)
+    queue = queue.then(() => {
+      return new Promise(res => {
+        setTimeout(() => {
+          runBot(username);
+          res();
+        }, delay);
+      });
+    });
   });
 
   bot.on('error', (err) => {
@@ -67,10 +81,10 @@ async function baslat(username) {
   });
 }
 
-// ❗ TEK TEK BAŞLAT (çok önemli fix)
+// 🔥 SIRALI BAŞLAT (çok önemli)
 async function startAll() {
   for (const isim of hesaplar) {
-    await bekle(random(5000, 12000)); // girişleri yay
+    await bekle(random(8000, 15000));
     baslat(isim);
   }
 }
