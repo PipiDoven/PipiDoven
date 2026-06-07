@@ -11,6 +11,9 @@ app.listen(process.env.PORT || 3000, () => {
 
 const mineflayer = require('mineflayer');
 
+process.on('uncaughtException', console.log);
+process.on('unhandledRejection', console.log);
+
 const hesaplar = [
   'ShaconunBicagi',
   'ShaconunBicagi2',
@@ -22,7 +25,6 @@ const hesaplar = [
   'ShaconunBicagi8',
   'ShaconunBicagi9',
 ];
-
 
 const HOST = 'oyna.craftluna.net';
 const PORT = 25565;
@@ -36,14 +38,20 @@ function random(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-// 🔥 GLOBAL QUEUE (EN ÖNEMLİ FIX)
+// 🔥 STABLE QUEUE (FIXLİ)
 let queue = Promise.resolve();
 
 function baslat(username) {
-  queue = queue.then(() => runBot(username));
+  console.log('BASLAT:', username);
+
+  queue = queue
+    .then(() => runBot(username))
+    .catch(err => console.log('QUEUE ERROR:', err));
 }
 
 async function runBot(username) {
+
+  console.log('RUNBOT START:', username);
 
   await bekle(random(5000, 12000));
 
@@ -77,14 +85,9 @@ async function runBot(username) {
 
     const delay = random(30000, 60000);
 
-    queue = queue.then(() => {
-      return new Promise(res => {
-        setTimeout(() => {
-          runBot(username);
-          res();
-        }, delay);
-      });
-    });
+    setTimeout(() => {
+      baslat(username);
+    }, delay);
   });
 
   bot.on('error', (err) => {
@@ -93,7 +96,11 @@ async function runBot(username) {
 }
 
 async function startAll() {
+  console.log('STARTALL BAŞLADI');
+
   for (const isim of hesaplar) {
+    console.log('QUEUE:', isim);
+
     await bekle(random(8000, 15000));
     baslat(isim);
   }
